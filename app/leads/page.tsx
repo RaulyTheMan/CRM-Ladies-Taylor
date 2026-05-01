@@ -85,6 +85,13 @@ export default function LeadsPage() {
   function handleStatusChange(id: string, status: LeadStatus) {
     setLeadStatus(id, status);
     setStatuses((prev) => ({ ...prev, [id]: status }));
+    if (status === "Junk") {
+      const lead = leads.find((l) => l._id === id);
+      if (lead) moveToJunk([lead]);
+      const updated = leads.filter((l) => l._id !== id);
+      setLeads(updated);
+      cacheLeads(updated);
+    }
   }
 
   // Selection
@@ -126,6 +133,13 @@ export default function LeadsPage() {
       ids.forEach((id) => { next[id] = status; });
       return next;
     });
+    if (status === "Junk") {
+      const toJunk = leads.filter((l) => ids.includes(l._id));
+      moveToJunk(toJunk);
+      const updated = leads.filter((l) => !ids.includes(l._id));
+      setLeads(updated);
+      cacheLeads(updated);
+    }
     setSelectedIds(new Set());
     setBulkStatusOpen(false);
   }
