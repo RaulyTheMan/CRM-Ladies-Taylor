@@ -1,24 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrashedLead, getTrashedLeads, restoreFromTrash, permanentlyDelete, clearTrash } from "@/lib/trash-store";
+import { JunkedLead, getJunkedLeads, restoreFromJunk, permanentlyDelete, clearJunk } from "@/lib/junk-store";
 import { cacheLeads, getCachedLeads } from "@/lib/lead-cache";
 import { deleteDeals } from "@/lib/deal-store";
 import { Check, RotateCcw, Trash2, X, AlertTriangle } from "lucide-react";
 
-export default function TrashPage() {
-  const [items, setItems] = useState<TrashedLead[]>([]);
+export default function JunkPage() {
+  const [items, setItems] = useState<JunkedLead[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [confirmEmptyOpen, setConfirmEmptyOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   useEffect(() => {
-    setItems(getTrashedLeads());
+    setItems(getJunkedLeads());
   }, []);
 
   function refresh() {
-    setItems(getTrashedLeads());
+    setItems(getJunkedLeads());
   }
 
   function toggleSelect(id: string) {
@@ -38,10 +38,10 @@ export default function TrashPage() {
   }
 
   function handleRestore() {
-    const restored = restoreFromTrash(Array.from(selectedIds));
+    const restored = restoreFromJunk(Array.from(selectedIds));
     const cached = getCachedLeads();
     const existingIds = new Set(cached.map((l) => l._id));
-    const toAdd = restored.filter((l) => !existingIds.has(l._id)).map(({ _trashedAt, ...lead }) => lead);
+    const toAdd = restored.filter((l) => !existingIds.has(l._id)).map(({ _junkedAt, ...lead }) => lead);
     cacheLeads([...cached, ...toAdd]);
     setSelectedIds(new Set());
     refresh();
@@ -56,9 +56,9 @@ export default function TrashPage() {
     refresh();
   }
 
-  function handleEmptyTrash() {
+  function handleEmptyJunk() {
     const allIds = items.map((l) => l._id);
-    clearTrash();
+    clearJunk();
     deleteDeals(allIds);
     setSelectedIds(new Set());
     setConfirmEmptyOpen(false);
@@ -79,7 +79,7 @@ export default function TrashPage() {
               color: "#252222", fontSize: 48, fontWeight: 700,
               lineHeight: 0.95, letterSpacing: "-0.02em", margin: 0,
             }}>
-              Trash
+              Junk
             </h1>
           </div>
           {items.length > 0 && (
@@ -98,7 +98,7 @@ export default function TrashPage() {
               }}
             >
               <Trash2 size={12} strokeWidth={2} />
-              Empty Trash
+              Empty Junk
             </button>
           )}
         </div>
@@ -108,7 +108,7 @@ export default function TrashPage() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/icon-trash.svg" alt="" style={{ width: 48, height: 48, opacity: 0.15 }} />
-          <p style={{ fontSize: 15, color: "rgba(37,34,34,0.35)", margin: 0 }}>Trash is empty</p>
+          <p style={{ fontSize: 15, color: "rgba(37,34,34,0.35)", margin: 0 }}>Junk is empty</p>
         </div>
       ) : (
         <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", paddingLeft: 80, paddingRight: 40 }}>
@@ -118,7 +118,7 @@ export default function TrashPage() {
                 <th style={{ width: 32, paddingRight: 12, paddingBottom: 12, textAlign: "left", borderBottom: "1.5px solid #d9d9d9" }}>
                   <CheckBox checked={allSelected} visible={anySelected} indeterminate={anySelected && !allSelected} onChange={toggleAll} />
                 </th>
-                {["NAME", "COMPANY", "EMAIL", "SOURCE", "TRASHED"].map((h) => (
+                {["NAME", "COMPANY", "EMAIL", "SOURCE", "JUNKED"].map((h) => (
                   <th key={h} style={{
                     textAlign: "left", padding: "0 20px 12px 0",
                     fontSize: 12, fontWeight: 700, letterSpacing: "0.07em",
@@ -155,7 +155,7 @@ export default function TrashPage() {
                     <td style={{ padding: "14px 20px 14px 0", borderBottom: "1px solid #f0f0f0", fontSize: 15, color: "rgba(37,34,34,0.5)" }}>{lead.Email || "—"}</td>
                     <td style={{ padding: "14px 20px 14px 0", borderBottom: "1px solid #f0f0f0", fontSize: 15, color: "rgba(37,34,34,0.5)" }}>{lead.Source || "—"}</td>
                     <td style={{ padding: "14px 20px 14px 0", borderBottom: "1px solid #f0f0f0", fontSize: 12, color: "rgba(37,34,34,0.35)" }}>
-                      {lead._trashedAt ? new Date(lead._trashedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                      {lead._junkedAt ? new Date(lead._junkedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
                     </td>
                   </tr>
                 );
@@ -228,7 +228,7 @@ export default function TrashPage() {
         </div>
       )}
 
-      {/* Empty Trash confirmation modal */}
+      {/* Empty Junk confirmation modal */}
       {confirmEmptyOpen && (
         <>
           <div
@@ -244,7 +244,7 @@ export default function TrashPage() {
             <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 16 }}>
               <AlertTriangle size={20} strokeWidth={1.75} style={{ color: "#ef4444", flexShrink: 0, marginTop: 2 }} />
               <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: "#252222", margin: "0 0 6px" }}>Empty Trash?</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: "#252222", margin: "0 0 6px" }}>Empty Junk?</p>
                 <p style={{ fontSize: 13, color: "rgba(37,34,34,0.55)", margin: 0, lineHeight: 1.5 }}>
                   All {items.length} item{items.length !== 1 ? "s" : ""} will be permanently deleted. This cannot be undone.
                 </p>
@@ -262,7 +262,7 @@ export default function TrashPage() {
                 Cancel
               </button>
               <button
-                onClick={handleEmptyTrash}
+                onClick={handleEmptyJunk}
                 style={{
                   padding: "8px 18px", borderRadius: 8, border: "none",
                   background: "#ef4444", color: "#fff", fontSize: 13, fontWeight: 700,

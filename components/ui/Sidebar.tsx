@@ -180,11 +180,11 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Trash link — above profile */}
+      {/* Junk link — above profile */}
       <div style={{ padding: collapsed ? "0 6px 8px 6px" : "0 6px 8px 12px" }}>
         <Link
-          href="/trash"
-          title={collapsed ? "Trash" : undefined}
+          href="/junk"
+          title={collapsed ? "Junk" : undefined}
           style={{
             display: "flex",
             alignItems: "center",
@@ -192,19 +192,19 @@ export function Sidebar() {
             gap: collapsed ? 0 : 12,
             padding: collapsed ? "10px 0" : "10px 14px",
             borderRadius: 8,
-            background: pathname === "/trash" ? "#FFB700" : "transparent",
-            color: pathname === "/trash" ? "#ffffff" : "rgba(37,34,34,0.45)",
+            background: pathname === "/junk" ? "#FFB700" : "transparent",
+            color: pathname === "/junk" ? "#ffffff" : "rgba(37,34,34,0.45)",
             textDecoration: "none",
             fontFamily: "'Satoshi', sans-serif",
             fontSize: 15,
-            fontWeight: pathname === "/trash" ? 700 : 500,
+            fontWeight: pathname === "/junk" ? 700 : 500,
             transition: "background 0.15s",
           }}
           onMouseEnter={(e) => {
-            if (pathname !== "/trash") (e.currentTarget as HTMLElement).style.background = "rgba(255,183,0,0.1)";
+            if (pathname !== "/junk") (e.currentTarget as HTMLElement).style.background = "rgba(255,183,0,0.1)";
           }}
           onMouseLeave={(e) => {
-            if (pathname !== "/trash") (e.currentTarget as HTMLElement).style.background = "transparent";
+            if (pathname !== "/junk") (e.currentTarget as HTMLElement).style.background = "transparent";
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -213,12 +213,12 @@ export function Sidebar() {
             alt=""
             style={{
               width: 20, height: 20, objectFit: "contain", flexShrink: 0,
-              filter: pathname === "/trash"
+              filter: pathname === "/junk"
                 ? "brightness(0) invert(1)"
                 : "brightness(0) opacity(0.4)",
             }}
           />
-          {!collapsed && <span>Trash</span>}
+          {!collapsed && <span>Junk</span>}
         </Link>
       </div>
 

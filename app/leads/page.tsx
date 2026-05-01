@@ -6,7 +6,7 @@ import { Lead, SortState, FilterState, FunnelStage } from "@/lib/types";
 import { getLeadStage } from "@/lib/funnel-store";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { cacheLeads, getCachedLeads } from "@/lib/lead-cache";
-import { moveToTrash } from "@/lib/trash-store";
+import { moveToJunk } from "@/lib/junk-store";
 import { LeadStatus, LEAD_STATUSES, STATUS_META, getAllStatuses, setLeadStatus } from "@/lib/status-store";
 import { COLUMNS } from "@/components/leads/LeadsTable";
 import {
@@ -89,7 +89,7 @@ export default function LeadsPage() {
 
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [confirmTrash, setConfirmTrash] = useState(false);
+  const [confirmJunk, setConfirmJunk] = useState(false);
   const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
 
   function handleToggleSelect(id: string) {
@@ -108,14 +108,14 @@ export default function LeadsPage() {
     }
   }
 
-  function handleMoveToTrash() {
-    const toTrash = leads.filter((l) => selectedIds.has(l._id));
-    moveToTrash(toTrash);
+  function handleMoveToJunk() {
+    const toJunk = leads.filter((l) => selectedIds.has(l._id));
+    moveToJunk(toJunk);
     const updated = leads.filter((l) => !selectedIds.has(l._id));
     setLeads(updated);
     cacheLeads(updated);
     setSelectedIds(new Set());
-    setConfirmTrash(false);
+    setConfirmJunk(false);
   }
 
   function handleBulkStatus(status: LeadStatus) {
@@ -521,7 +521,7 @@ export default function LeadsPage() {
           {/* Bulk status change */}
           <div style={{ position: "relative" }}>
             <button
-              onClick={() => { setBulkStatusOpen((o) => !o); setConfirmTrash(false); }}
+              onClick={() => { setBulkStatusOpen((o) => !o); setConfirmJunk(false); }}
               style={{
                 display: "flex", alignItems: "center", gap: 6,
                 background: "rgba(255,255,255,0.1)", border: "none",
@@ -562,14 +562,14 @@ export default function LeadsPage() {
             )}
           </div>
 
-          {/* Move to Trash */}
-          {confirmTrash ? (
+          {/* Move to Junk */}
+          {confirmJunk ? (
             <>
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
-                Trash {selectedIds.size} lead{selectedIds.size !== 1 ? "s" : ""}?
+                Move {selectedIds.size} lead{selectedIds.size !== 1 ? "s" : ""} to Junk?
               </span>
               <button
-                onClick={handleMoveToTrash}
+                onClick={handleMoveToJunk}
                 style={{
                   display: "flex", alignItems: "center", gap: 5,
                   background: "#ef4444", border: "none",
@@ -580,7 +580,7 @@ export default function LeadsPage() {
                 <Check size={12} strokeWidth={2.5} /> Confirm
               </button>
               <button
-                onClick={() => setConfirmTrash(false)}
+                onClick={() => setConfirmJunk(false)}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center" }}
               >
                 <X size={14} />
@@ -589,7 +589,7 @@ export default function LeadsPage() {
           ) : (
             <>
               <button
-                onClick={() => { setConfirmTrash(true); setBulkStatusOpen(false); }}
+                onClick={() => { setConfirmJunk(true); setBulkStatusOpen(false); }}
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   background: "rgba(239,68,68,0.15)", border: "none",
@@ -599,7 +599,7 @@ export default function LeadsPage() {
                 }}
               >
                 <Trash2 size={13} strokeWidth={2} />
-                Move to Trash
+                Move to Junk
               </button>
               <button
                 onClick={() => setSelectedIds(new Set())}
