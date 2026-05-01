@@ -67,7 +67,7 @@ function uid() {
 
 export default function LeadsPage() {
   const router = useRouter();
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<Lead[]>(() => getCachedLeads());
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [sort, setSort] = useState<SortState>({ column: "Submitted At", direction: "desc" });
   const [filters, setFilters] = useState<FilterState>({ source: "", dateFrom: "", dateTo: "" });
@@ -157,24 +157,32 @@ export default function LeadsPage() {
 
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const fetchLeads = useCallback(async () => {
+  const fetchLeads = useCallback(async (background = false) => {
     setLoadState("loading");
     try {
       const res = await fetch("/api/leads");
       if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
       const fetched = data.leads ?? [];
-      const cached = getCachedLeads().filter((l) => l._id.startsWith("manual_"));
-      const all = [...cached, ...fetched];
+      const manual = getCachedLeads().filter((l) => l._id.startsWith("manual_"));
+      const all = [...manual, ...fetched];
       setLeads(all);
       cacheLeads(all);
       setLoadState("idle");
     } catch {
-      setLoadState("error");
+      // If we already have cached data, don't show error — just silently fail
+      if (background && leads.length > 0) {
+        setLoadState("idle");
+      } else {
+        setLoadState("error");
+      }
     }
-  }, []);
+  }, [leads.length]);
 
-  useEffect(() => { fetchLeads(); }, [fetchLeads]);
+  useEffect(() => {
+    const hasCache = getCachedLeads().length > 0;
+    fetchLeads(hasCache);
+  }, [fetchLeads]);
 
   useEffect(() => {
     if (leads.length === 0) return;
@@ -282,7 +290,7 @@ export default function LeadsPage() {
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4 }}>
 
             {/* Refresh */}
-            <ToolBtn onClick={fetchLeads} title="Refresh" active={false}>
+            <ToolBtn onClick={() => fetchLeads(false)} title="Refresh" active={false}>
               <RefreshCw size={14} strokeWidth={2} className={loadState === "loading" ? "animate-spin" : ""} />
             </ToolBtn>
 
@@ -445,7 +453,7 @@ export default function LeadsPage() {
           style={{ background: "oklch(97% 0.01 15)", color: "oklch(40% 0.12 15)", marginLeft: 80 }}>
           <AlertCircle size={14} strokeWidth={1.75} />
           <span>Couldn't load leads. Check your connection or Sheet permissions.</span>
-          <button onClick={fetchLeads} className="ml-auto text-[12px] underline underline-offset-2">Retry</button>
+          <button onClick={() => fetchLeads(false)} className="ml-auto text-[12px] underline underline-offset-2">Retry</button>
         </div>
       )}
 

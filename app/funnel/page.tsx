@@ -12,7 +12,7 @@ type View = "kanban" | "list";
 type LoadState = "idle" | "loading" | "error";
 
 export default function FunnelPage() {
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<Lead[]>(() => getCachedLeads());
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [view, setView] = useState<View>("kanban");
   const [stages, setStages] = useState<FunnelData>({});
@@ -31,7 +31,12 @@ export default function FunnelPage() {
       setStages(getFunnelData());
       setLoadState("idle");
     } catch {
-      setLoadState("error");
+      // If cache has data, don't show error banner — silently fail
+      if (getCachedLeads().length > 0) {
+        setLoadState("idle");
+      } else {
+        setLoadState("error");
+      }
     }
   }, []);
 

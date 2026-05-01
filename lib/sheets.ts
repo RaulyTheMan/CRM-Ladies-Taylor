@@ -1,16 +1,27 @@
 import { Lead } from "./types";
 import { LEAD_SOURCES } from "./sources";
 
+// Server-side in-memory cache — avoids hammering Google Apps Script on every request.
+// Cache is valid for 2 minutes; stale data is still returned while a refresh runs.
+let _cache: { leads: Lead[]; ts: number } | null = null;
+const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
 export async function getLeadsFromSheet(): Promise<Lead[]> {
   // No sources configured yet — return mock data
   if (LEAD_SOURCES.length === 0) {
     return getMockLeads();
   }
 
+  // Return cached data if fresh enough
+  const now = Date.now();
+  if (_cache && now - _cache.ts < CACHE_TTL_MS) {
+    return _cache.leads;
+  }
+
   // Fetch all sources in parallel
   const results = await Promise.allSettled(
     LEAD_SOURCES.map(async ({ label, url, source, campaign }) => {
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
       if (!res.ok) throw new Error(`Failed to fetch from "${label}"`);
       const data = await res.json();
       const leads: Lead[] = data.leads ?? [];
@@ -39,6 +50,10 @@ export async function getLeadsFromSheet(): Promise<Lead[]> {
     }
   });
 
+  // If fetch produced nothing but we have stale cache, return stale rather than empty
+  if (merged.length === 0 && _cache) return _cache.leads;
+
+  _cache = { leads: merged, ts: Date.now() };
   return merged;
 }
 
